@@ -8,18 +8,15 @@ import crypto from "crypto";
 dotenv.config();
 const app = express();
 
-// Shopify webhook: precisa usar raw body para validar HMAC se necessário
 app.use("/webhooks/collections_create", express.raw({ type: "application/json" }));
 
 const SHOP = process.env.SHOP;
 const ADMIN_API_TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
 
 // Caminho do arquivo onde os códigos são armazenados
-const CODES_FILE = path.resolve("./codes.txt");
+const CODES_FILE = path.resolve("./data/codes.txt");
 
-/* ───────────────────────────────────────────────
-   🧩 Classe de geração e controle de códigos
-────────────────────────────────────────────────── */
+/* Classe de geração e controle de códigos*/
 class SellerCodeGenerator {
   constructor() {
     this.letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -96,9 +93,7 @@ class SellerCodeGenerator {
   }
 }
 
-/* ───────────────────────────────────────────────
-   🔁 Atualiza coleção no Shopify
-────────────────────────────────────────────────── */
+/* Atualiza coleção no Shopify */
 async function updateCollection(id, title, code) {
   const mutation = `
     mutation updateCollection($id: ID!, $code: String!, $title: String!) {
@@ -131,9 +126,7 @@ async function updateCollection(id, title, code) {
   return await res.json();
 }
 
-/* ───────────────────────────────────────────────
-   🌐 Busca Seller ID no Webkul via handle
-────────────────────────────────────────────────── */
+/* Busca Seller ID no Webkul via handle */
 async function getSellerIdFromWebkul(handle) {
   const apiUrl = new URL("https://mvmapi.webkul.com/api/v2/public/sellers.json");
   apiUrl.searchParams.append("shop_name", SHOP);
@@ -205,12 +198,7 @@ async function updateCollectionTitle(collectionGID, newTitle) {
   return res.json();
 }
 
-
-
-
-/* ───────────────────────────────────────────────
-   📦 Webhook: coleção criada
-────────────────────────────────────────────────── */
+/* Webhook: coleção criada */
 app.post("/webhooks/collections_create", async (req, res) => {
   try {
     const payload = JSON.parse(req.body.toString("utf8"));
@@ -269,10 +257,7 @@ app.post("/webhooks/shopify/collection_update", express.raw({ type: "application
   }
 });
 
-
-/* =====================================================
-   6️⃣ 🔥 E logo abaixo, o Webhook 2 — Webkul seller_update
-===================================================== */
+/* Webkul seller_update */
 app.post("/webhooks/webkul/seller_update", express.json(), async (req, res) => {
   try {
     const { handle, name } = req.body;
@@ -311,8 +296,5 @@ app.post("/webhooks/webkul/seller_update", express.json(), async (req, res) => {
   }
 });
 
-
-/* ───────────────────────────────────────────────
-   🚀 Inicialização do servidor
-────────────────────────────────────────────────── */
+/* Inicialização do servidor */
 app.listen(3000, () => console.log("Servidor rodando na porta 3000 🚀"));
